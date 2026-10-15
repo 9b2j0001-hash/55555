@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>my-site | 咖啡角落 Cafe Blog</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        espresso: '#2C1810',
+                        roast: '#4A2C11',
+                        warmcream: '#FDFBF7',
+                        coffeemilk: '#F4ECE1',
+                        terracotta: '#C86D51',
+                        latte: '#D4B896'
+                    },
+                    fontFamily: {
+                        sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        serif: ['Georgia', 'Cambria', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #F4ECE1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #C86D51;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-warmcream text-espresso antialiased min-h-screen flex flex-col font-sans">
+
+    <!-- Builder Status / Control Bar (Simulating the CMS environment) -->
+    <div class="bg-espresso text-coffeemilk px-4 py-2.5 text-xs md:text-sm flex flex-wrap items-center justify-between border-b border-roast sticky top-0 z-50 shadow-md">
+        <div class="flex items-center space-x-3">
+            <span class="flex items-center space-x-1.5 bg-emerald-900/60 text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-700/50">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="font-medium">預覽模式 Preview Mode</span>
+            </span>
+            <span class="text-coffeemilk/60">|</span>
+            <span class="font-mono text-amber-200">頁面: <strong class="text-white">my-site</strong></span>
+            <span class="text-coffeemilk/60">|</span>
+            <span class="font-mono text-amber-200">模板: <strong class="text-white">cafe</strong></span>
+        </div>
+        <div class="flex items-center space-x-3 mt-1 sm:mt-0">
+            <button onclick="showToast('已儲存目前草稿')" class="hover:text-amber-300 transition text-xs flex items-center gap-1 bg-roast/80 px-2.5 py-1 rounded border border-coffeemilk/20">
+                <i class="fa-regular fa-floppy-disk"></i> 儲存
+            </button>
+            <button onclick="toggleDraftInfo()" class="hover:text-amber-300 transition text-xs flex items-center gap-1 bg-terracotta px-2.5 py-1 rounded text-white font-medium shadow-sm">
+                <i class="fa-solid fa-code"></i> 指令狀態
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Site Navigation Header -->
+    <header class="bg-warmcream/90 backdrop-blur-md sticky top-[41px] z-40 border-b border-coffeemilk/80">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+            <!-- Logo -->
+            <a href="#" class="flex items-center space-x-3 group">
+                <div class="w-10 h-10 rounded-full bg-roast text-coffeemilk flex items-center justify-center text-lg shadow-md group-hover:scale-105 transition">
+                    <i class="fa-solid fa-mug-hot"></i>
+                </div>
+                <div>
+                    <span class="font-serif text-xl font-bold tracking-tight text-espresso block leading-none">Café Corner</span>
+                    <span class="text-[10px] tracking-widest text-terracotta uppercase font-semibold">Coffee & Stories</span>
+                </div>
+            </a>
+
+            <!-- Nav Links -->
+            <nav class="hidden md:flex items-center space-x-8 text-sm font-medium text-espresso/80">
+                <a href="#featured" class="hover:text-terracotta transition">精選故事</a>
+                <a href="#articles" class="hover:text-terracotta transition">最新文章</a>
+                <a href="#menu" class="hover:text-terracotta transition">本月特調</a>
+                <a href="#about" class="hover:text-terracotta transition">關於我們</a>
+            </nav>
+
+            <!-- Actions -->
+            <div class="flex items-center space-x-3">
+                <div class="relative hidden sm:block">
+                    <input type="text" id="searchInput" oninput="filterArticles()" placeholder="搜尋咖啡故事..." class="bg-coffeemilk/50 border border-latte/40 text-xs rounded-full pl-8 pr-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-terracotta/50 w-40 focus:w-56 transition-all">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2 text-espresso/40 text-xs"></i>
+                </div>
+                <button onclick="toggleSavedArticles()" class="relative p-2 rounded-full hover:bg-coffeemilk text-espresso transition" title="已收藏文章">
+                    <i class="fa-regular fa-bookmark"></i>
+                    <span id="bookmarkCount" class="absolute -top-1 -right-1 bg-terracotta text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Banner -->
+    <section class="relative bg-roast text-coffeemilk py-20 px-4 overflow-hidden">
+        <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#d4b896_1px,transparent_1px)] [background-size:16px_16px]"></div>
+        <div class="max-w-4xl mx-auto text-center relative z-10 space-y-6">
+            <span class="inline-block bg-terracotta/30 text-amber-200 border border-terracotta/50 text-xs uppercase tracking-widest px-3 py-1 rounded-full font-semibold">
+                /use-template cafe • my-site
+            </span>
+            <h1 class="font-serif text-4xl sm:text-6xl font-bold tracking-tight leading-tight text-amber-50">
+                萃取時光的香氣，<br class="hidden sm:block"/>紀錄每一杯咖啡的靈魂
+            </h1>
+            <p class="text-coffeemilk/80 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
+                歡迎來到 <span class="text-amber-200 font-semibold underline decoration-terracotta underline-offset-4">my-site</span>。這裡不只調配精緻的手沖咖啡，更烘焙生活中的慢步調與溫暖故事。
+            </p>
+            <div class="pt-4 flex flex-wrap justify-center gap-4">
+                <a href="#articles" class="bg-terracotta hover:bg-terracotta/90 text-white font-medium px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition transform hover:-translate-y-0.5">
+                    探索最新文章 <i class="fa-solid fa-arrow-down ml-2 text-xs"></i>
+                </a>
+                <a href="#menu" class="bg-coffeemilk/10 hover:bg-coffeemilk/20 text-coffeemilk border border-coffeemilk/30 font-medium px-6 py-3 rounded-full transition">
+                    查看菜單特調
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 sm:px-6 py-12 space-y-16">
+
+        <!-- Category Tags -->
+        <section class="flex items-center justify-between border-b border-latte/30 pb-4 overflow-x-auto gap-4 custom-scrollbar">
+            <div class="flex items-center space-x-2 shrink-0">
+                <button onclick="setActiveCategory('all')" class="cat-btn active bg-espresso text-warmcream px-4 py-1.5 rounded-full text-xs font-medium transition shadow-sm" data-cat="all">全部文章</button>
+                <button onclick="setActiveCategory('coffee')" class="cat-btn bg-coffeemilk/70 text-espresso hover:bg-latte/40 px-4 py-1.5 rounded-full text-xs font-medium transition" data-cat="coffee">☕ 咖啡知識</button>
+                <button onclick="setActiveCategory('recipes')" class="cat-btn bg-coffeemilk/70 text-espresso hover:bg-latte/40 px-4 py-1.5 rounded-full text-xs font-medium transition" data-cat="recipes">🥐 甜點烘焙</button>
+                <button onclick="setActiveCategory('life')" class="cat-btn bg-coffeemilk/70 text-espresso hover:bg-latte/40 px-4 py-1.5 rounded-full text-xs font-medium transition" data-cat="life">🌿 門市日誌</button>
+            </div>
+            <div class="text-xs text-espresso/60 shrink-0 hidden sm:block">
+                顯示中：<span id="articleCount" class="font-bold text-espresso">4</span> 篇文章
+            </div>
+        </section>
+
+        <!-- Featured Post Section -->
+        <section id="featured" class="bg-coffeemilk/40 rounded-3xl p-6 sm:p-8 border border-latte/40 shadow-sm transition hover:shadow-md">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <div class="lg:col-span-7 relative group overflow-hidden rounded-2xl aspect-[16/10]">
+                    <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1000&q=80" alt="Pour over coffee" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                    <span class="absolute top-4 left-4 bg-espresso/80 text-amber-200 backdrop-blur-md text-xs px-3 py-1 rounded-full font-medium">主打推薦</span>
+                </div>
+                <div class="lg:col-span-5 space-y-4">
+                    <div class="flex items-center space-x-3 text-xs text-terracotta font-semibold">
+                        <span>☕ 咖啡知識</span>
+                        <span>•</span>
+                        <span class="text-espresso/60 font-normal">2026-10-12</span>
+                    </div>
+                    <h2 class="font-serif text-2xl sm:text-3xl font-bold text-espresso hover:text-terracotta transition cursor-pointer" onclick="openArticleModal(0)">
+                        手沖咖啡的溫度哲學：從 88°C 到 92°C 的風味探索
+                    </h2>
+                    <p class="text-espresso/70 text-sm leading-relaxed line-clamp-3">
+                        水溫是決定手沖咖啡成敗的關鍵因子。高溫能迅速萃取果酸與芳香物質，而稍低的水溫則能帶出堅果與可可的沉穩餘韻。本文帶您深入解密理想沖煮溫度...
+                    </p>
+                    <div class="pt-2 flex items-center justify-between">
+                        <button onclick="openArticleModal(0)" class="text-xs font-bold text-espresso border-b-2 border-terracotta pb-0.5 hover:text-terracotta transition flex items-center gap-1">
+                            閱讀完整文章 <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </button>
+                        <span class="text-xs text-espresso/50">5 分鐘閱讀</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Articles Grid -->
+        <section id="articles" class="space-y-6">
+            <div class="flex items-center justify-between">
+                <h3 class="font-serif text-2xl font-bold text-espresso flex items-center gap-2">
+                    <i class="fa-solid fa-book-open text-terracotta text-lg"></i> 最新部落格文章
+                </h3>
+            </div>
+
+            <div id="articlesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Article Cards will be rendered dynamically by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Seasonal Menu Spotlight Widget -->
+        <section id="menu" class="bg-roast text-coffeemilk rounded-3xl p-8 shadow-xl relative overflow-hidden">
+            <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl">
+                <i class="fa-solid fa-mug-saucer"></i>
+            </div>
+            <div class="relative z-10 max-w-3xl space-y-6">
+                <div>
+                    <span class="text-xs tracking-widest uppercase text-amber-300 font-semibold">Seasonal Menu Highlights</span>
+                    <h3 class="font-serif text-3xl font-bold text-white mt-1">秋季特調與現烤點心</h3>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-espresso/60 p-4 rounded-xl border border-coffeemilk/10 flex items-center justify-between">
+                        <div>
+                            <h4 class="font-bold text-amber-100 text-sm">桂花黑糖拿鐵</h4>
+                            <p class="text-xs text-coffeemilk/60">小農鮮乳 x 古法黑糖 x 烘焙桂花</p>
+                        </div>
+                        <span class="text-amber-300 font-mono font-bold text-sm">NT$ 160</span>
+                    </div>
+                    <div class="bg-espresso/60 p-4 rounded-xl border border-coffeemilk/10 flex items-center justify-between">
+                        <div>
+                            <h4 class="font-bold text-amber-100 text-sm">肉桂焦糖肉桂卷</h4>
+                            <p class="text-xs text-coffeemilk/60">老麵發酵 x 肉桂濃郁抹醬</p>
+                        </div>
+                        <span class="text-amber-300 font-mono font-bold text-sm">NT$ 120</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Newsletter Section -->
+        <section class="bg-coffeemilk/60 rounded-3xl p-8 text-center space-y-4 border border-latte/30">
+            <div class="w-12 h-12 bg-terracotta text-white rounded-full flex items-center justify-center mx-auto text-xl shadow-md">
+                <i class="fa-regular fa-paper-plane"></i>
+            </div>
+            <h3 class="font-serif text-2xl font-bold text-espresso">訂閱 Café Corner 雙週報</h3>
+            <p class="text-xs sm:text-sm text-espresso/70 max-w-md mx-auto">
+                獲得最新的沖煮教學、限定咖啡豆上市消息以及每週私房甜點食譜。
+            </p>
+            <form onsubmit="handleSubscribe(event)" class="max-w-md mx-auto flex gap-2">
+                <input type="email" required placeholder="輸入您的 Email 地址..." class="flex-grow bg-warmcream border border-latte/60 text-xs rounded-full px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-terracotta">
+                <button type="submit" class="bg-espresso hover:bg-roast text-coffeemilk text-xs font-semibold px-6 py-2.5 rounded-full transition shadow">
+                    立即訂閱
+                </button>
+            </form>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer id="about" class="bg-espresso text-coffeemilk/70 py-12 border-t border-roast mt-12 text-xs">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="space-y-3">
+                <div class="flex items-center space-x-2 text-white">
+                    <i class="fa-solid fa-mug-hot text-terracotta text-lg"></i>
+                    <span class="font-serif text-lg font-bold">Café Corner (my-site)</span>
+                </div>
+                <p class="leading-relaxed">
+                    以咖啡為名，寫下生活與美味的敘事頁面。套用模板：<code class="text-amber-200">cafe</code>
+                </p>
+            </div>
+            <div class="space-y-2">
+                <h4 class="text-white font-bold mb-3">營業時間 & 位置</h4>
+                <p><i class="fa-regular fa-clock w-4 text-terracotta"></i> 週一至週日：08:00 - 19:00</p>
+                <p><i class="fa-solid fa-location-dot w-4 text-terracotta"></i> 台北市大安區咖啡大道 101 號</p>
+                <p><i class="fa-solid fa-phone w-4 text-terracotta"></i> (02) 2345-6789</p>
+            </div>
+            <div class="space-y-3">
+                <h4 class="text-white font-bold">追蹤角落日誌</h4>
+                <div class="flex space-x-3 text-base">
+                    <a href="#" class="w-8 h-8 rounded-full bg-roast hover:bg-terracotta text-white flex items-center justify-center transition"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#" class="w-8 h-8 rounded-full bg-roast hover:bg-terracotta text-white flex items-center justify-center transition"><i class="fa-brands fa-facebook"></i></a>
+                    <a href="#" class="w-8 h-8 rounded-full bg-roast hover:bg-terracotta text-white flex items-center justify-center transition"><i class="fa-solid fa-rss"></i></a>
+                </div>
+                <p class="text-[11px] text-coffeemilk/50">© 2026 my-site Cafe Blog. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Article Detail Modal -->
+    <div id="articleModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-warmcream text-espresso rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto custom-scrollbar shadow-2xl p-6 sm:p-8 space-y-6 relative border border-latte">
+            <button onclick="closeArticleModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-coffeemilk hover:bg-latte flex items-center justify-center text-espresso transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div id="modalContent">
+                <!-- Modal content dynamically injected -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Draft Command Info Modal -->
+    <div id="draftModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-espresso text-coffeemilk rounded-2xl max-w-md w-full shadow-2xl p-6 space-y-4 border border-roast">
+            <div class="flex items-center justify-between border-b border-roast pb-3">
+                <h3 class="font-bold text-amber-200 flex items-center gap-2">
+                    <i class="fa-solid fa-terminal"></i> 執行指令紀錄
+                </h3>
+                <button onclick="toggleDraftInfo()" class="text-coffeemilk/60 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="bg-black/40 rounded-lg p-3 font-mono text-xs space-y-2 text-emerald-300">
+                <p>✓ <span class="text-amber-300">/new-page my-site</span> → 建立新頁面「my-site」</p>
+                <p>✓ <span class="text-amber-300">/use-template cafe</span> → 套用部落格模板</p>
+                <p>✓ <span class="text-amber-300">/preview</span> → 預覽結果完成！</p>
+            </div>
+            <p class="text-xs text-coffeemilk/70 leading-relaxed">
+                目前頁面已成功以部落格架構渲染完成。您可以點擊頁面上方的按鈕互動，或查看個別文章內容。
+            </p>
+            <button onclick="toggleDraftInfo()" class="w-full bg-terracotta hover:bg-terracotta/90 text-white text-xs font-semibold py-2 rounded-lg transition">
+                關閉視窗
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-espresso text-amber-200 px-4 py-3 rounded-xl shadow-2xl border border-terracotta/50 text-xs transform translate-y-20 opacity-0 transition-all duration-300 flex items-center space-x-2 z-50">
+        <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+        <span id="toastMessage">提示訊息</span>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Article Data Source
+        const articles = [
+            {
+                id: 0,
+                title: "手沖咖啡的溫度哲學：從 88°C 到 92°C 的風味探索",
+                category: "coffee",
+                categoryLabel: "☕ 咖啡知識",
+                date: "2026-10-12",
+                readTime: "5 min",
+                image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80",
+                snippet: "水溫是決定手沖咖啡成敗的關鍵因子。高溫能迅速萃取果酸與芳香物質，而稍低的水溫則能帶出堅果與可可的沉穩餘韻。",
+                content: `
+                    <p class="mb-4">水溫是決定手沖咖啡成敗的關鍵因子。高溫能迅速萃取果酸與芳香物質，而稍低的水溫則能帶出堅果與可可的沉穩餘韻。</p>
+                    <h4 class="font-serif font-bold text-lg mb-2 text-espresso">1. 淺焙豆的極致詮釋 (90°C - 92°C)</h4>
+                    <p class="mb-4">對於保留豐富果香與花香的高海拔淺焙豆（如耶加雪菲或瑰夏），較高的水溫能完整釋放其細緻的花果酸香與清甜感。</p>
+                    <h4 class="font-serif font-bold text-lg mb-2 text-espresso">2. 中深焙豆的醇厚甘甜 (85°C - 88°C)</h4>
+                    <p class="mb-4">中深焙豆焦糖化程度高，過高的水溫容易萃取出不必要的苦澀味。降溫萃取能突出焦糖、黑巧克力與堅果的油脂滑順感。</p>
+                `
+            },
+            {
+                id: 1,
+                title: "探索日式手作可頌：外酥內軟的千層密碼",
+                category: "recipes",
+                categoryLabel: "🥐 甜點烘焙",
+                date: "2026-10-08",
+                readTime: "4 min",
+                image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=800&q=80",
+                snippet: "好的可頌需要發酵奶油與麵糰經過無數次折疊，每一層都是空氣與時間的完美結晶。",
+                content: `
+                    <p class="mb-4">每一顆完美的日式可頌，內部都藏著均勻美麗蜂巢狀結構。這背後是控制在 18°C 恆溫室內的揉麵與折疊藝術。</p>
+                    <p class="mb-4">選用無鹽發酵奶油，搭配低溫長時間發酵的麵糰，讓小麥天然的甜味與濃郁乳香在烤箱高溫烘焙下爆發出層次豐富的酥脆感。</p>
+                `
+            },
+            {
+                id: 2,
+                title: "秋日散步指南：尋找城市角落的單品咖啡香",
+                category: "life",
+                categoryLabel: "🌿 門市日誌",
+                date: "2026-09-28",
+                readTime: "3 min",
+                image: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+                snippet: "秋天的空氣帶有一絲微涼，正是端著一杯熱拉花拿鐵，漫步在巷弄看銀杏變黃的最佳時節。",
+                content: `
+                    <p class="mb-4">當秋意漸濃，店裡的落地窗前總會坐滿尋找陽光顧客。我們特別挑選了帶有桂花與榛果香氣的秋季特調豆，希望為每位造訪的客人帶來一份踏實的溫暖。</p>
+                `
+            },
+            {
+                id: 3,
+                title: "如何在家打造理想的 Home Barista 咖啡角？",
+                category: "coffee",
+                categoryLabel: "☕ 咖啡知識",
+                date: "2026-09-15",
+                readTime: "6 min",
+                image: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80",
+                snippet: "從小巧的手搖磨豆機到質感濾杯，打造一個充滿儀式感的居家咖啡角落其實很簡單。",
+                content: `
+                    <p class="mb-4">不必花大錢買昂貴的義式咖啡機，一個採光良好的檯面、一把手沖壺、一台好的平刀磨豆機，就能開啟充滿咖啡香氣的清晨。</p>
+                `
+            }
+        ];
+
+        let savedArticles = new Set();
+        let currentCategory = 'all';
+
+        // Render Articles
+        function renderArticles() {
+            const grid = document.getElementById('articlesGrid');
+            const searchVal = document.getElementById('searchInput')?.value.toLowerCase() || '';
+
+            const filtered = articles.filter(art => {
+                const matchesCat = currentCategory === 'all' || art.category === currentCategory;
+                const matchesSearch = art.title.toLowerCase().includes(searchVal) || art.snippet.toLowerCase().includes(searchVal);
+                return matchesCat && matchesSearch;
+            });
+
+            document.getElementById('articleCount').innerText = filtered.length;
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12 text-espresso/50">
+                        <i class="fa-solid fa-mug-saucer text-4xl mb-3 opacity-40"></i>
+                        <p class="text-sm">沒有找到相關的文章內容。</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(art => `
+                <article class="bg-coffeemilk/30 rounded-2xl overflow-hidden border border-latte/30 shadow-sm hover:shadow-md transition duration-300 flex flex-col group">
+                    <div class="relative overflow-hidden aspect-[16/10]">
+                        <img src="${art.image}" alt="${art.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        <span class="absolute top-3 left-3 bg-warmcream/90 text-espresso text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-sm">
+                            ${art.categoryLabel}
+                        </span>
+                        <button onclick="toggleSave(${art.id}, event)" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-warmcream/90 text-espresso hover:text-terracotta flex items-center justify-center transition shadow-sm">
+                            <i class="${savedArticles.has(art.id) ? 'fa-solid text-terracotta' : 'fa-regular'} fa-bookmark"></i>
+                        </button>
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col justify-between space-y-4">
+                        <div class="space-y-2">
+                            <div class="text-[11px] text-espresso/50 flex items-center justify-between">
+                                <span>${art.date}</span>
+                                <span><i class="fa-regular fa-clock"></i> ${art.readTime}</span>
+                            </div>
+                            <h4 onclick="openArticleModal(${art.id})" class="font-serif font-bold text-lg text-espresso group-hover:text-terracotta transition cursor-pointer leading-snug">
+                                ${art.title}
+                            </h4>
+                            <p class="text-xs text-espresso/70 leading-relaxed line-clamp-2">
+                                ${art.snippet}
+                            </p>
+                        </div>
+                        <div class="pt-2 border-t border-latte/20 flex items-center justify-between">
+                            <button onclick="openArticleModal(${art.id})" class="text-xs font-semibold text-terracotta hover:underline">
+                                閱讀更多
+                            </button>
+                            <span class="text-[11px] text-espresso/40"><i class="fa-regular fa-heart"></i> 24</span>
+                        </div>
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        // Category Filter Toggle
+        function setActiveCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.cat-btn').forEach(btn => {
+                if (btn.dataset.cat === cat) {
+                    btn.classList.add('bg-espresso', 'text-warmcream', 'shadow-sm');
+                    btn.classList.remove('bg-coffeemilk/70', 'text-espresso');
+                } else {
+                    btn.classList.remove('bg-espresso', 'text-warmcream', 'shadow-sm');
+                    btn.classList.add('bg-coffeemilk/70', 'text-espresso');
+                }
+            });
+            renderArticles();
+        }
+
+        // Search Filter
+        function filterArticles() {
+            renderArticles();
+        }
+
+        // Bookmark Toggle
+        function toggleSave(id, e) {
+            e.stopPropagation();
+            if (savedArticles.has(id)) {
+                savedArticles.delete(id);
+                showToast('已取消收藏文章');
+            } else {
+                savedArticles.add(id);
+                showToast('已成功收藏文章！');
+            }
+            document.getElementById('bookmarkCount').innerText = savedArticles.size;
+            renderArticles();
+        }
+
+        function toggleSavedArticles() {
+            if (savedArticles.size === 0) {
+                showToast('目前尚未收藏任何文章');
+            } else {
+                showToast(`您共收藏了 ${savedArticles.size} 篇文章`);
+            }
+        }
+
+        // Modal Functions
+        function openArticleModal(id) {
+            const art = articles.find(a => a.id === id);
+            if (!art) return;
+
+            const modalContent = document.getElementById('modalContent');
+            modalContent.innerHTML = `
+                <div class="space-y-4">
+                    <span class="text-xs font-bold text-terracotta uppercase tracking-wider">${art.categoryLabel} • ${art.date}</span>
+                    <h2 class="font-serif text-2xl sm:text-3xl font-bold text-espresso leading-tight">${art.title}</h2>
+                    <img src="${art.image}" class="w-full h-56 sm:h-72 object-cover rounded-xl shadow" alt="${art.title}">
+                    <div class="text-xs sm:text-sm text-espresso/80 leading-relaxed border-t border-latte/40 pt-4">
+                        ${art.content}
+                    </div>
+                    <div class="pt-4 border-t border-latte/40 flex items-center justify-between">
+                        <button onclick="toggleSave(${art.id}, event)" class="bg-coffeemilk hover:bg-latte text-espresso text-xs font-medium px-4 py-2 rounded-lg transition flex items-center gap-1.5">
+                            <i class="${savedArticles.has(art.id) ? 'fa-solid text-terracotta' : 'fa-regular'} fa-bookmark"></i>
+                            ${savedArticles.has(art.id) ? '已收藏' : '加入收藏'}
+                        </button>
+                        <span class="text-xs text-espresso/50">閱讀時間約 ${art.readTime}</span>
+                    </div>
+                </div>
+            `;
+            document.getElementById('articleModal').classList.remove('hidden');
+        }
+
+        function closeArticleModal() {
+            document.getElementById('articleModal').classList.add('hidden');
+        }
+
+        function toggleDraftInfo() {
+            const modal = document.getElementById('draftModal');
+            modal.classList.toggle('hidden');
+        }
+
+        // Newsletter Handler
+        function handleSubscribe(e) {
+            e.preventDefault();
+            showToast('感謝訂閱 Café Corner 雙週報！');
+            e.target.reset();
+        }
+
+        // Toast Helper
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Initial Render
+        document.addEventListener('DOMContentLoaded', () => {
+            renderArticles();
+        });
+    </script>
+</body>
+</html>
